@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hash Generator</title>
+</head>
+<body>
+  <h1>Hash Generator</h1>
+  
+  <label for="inputText">Input Text:</label>
+  <textarea id="inputText" rows="4" cols="50"></textarea>
+  
+  <button onclick="generateHash()">Generate Hash</button>
+
+  <h2>Generated Hashes:</h2>
+  <ul id="hashList"></ul>
+
+  <script>
+    function generateHash() {
+      const inputText = document.getElementById('inputText').value;
+      
+      if (inputText.trim() === '') {
+        alert('Please enter some text.');
+        return;
+      }
+
+      // ハッシュを生成
+      generateHashForAlgorithm(inputText, 'SHA-256');
+      generateHashForAlgorithm(inputText, 'SHA-512');
+      // 別のアルゴリズムを追加する場合はここに追加
+
+      document.getElementById('inputText').value = ''; // 入力欄をクリア
+    }
+
+    async function generateHashForAlgorithm(input, algorithm) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(input);
+
+      try {
+        const buffer = await crypto.subtle.digest(algorithm, data);
+        const hashArray = Array.from(new Uint8Array(buffer));
+        const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+
+        // 生成したハッシュをリストに追加
+        const hashList = document.getElementById('hashList');
+        const listItem = document.createElement('li');
+        listItem.textContent = `${algorithm}: ${hashHex}`;
+        hashList.appendChild(listItem);
+      } catch (error) {
+        console.error(`Error generating hash with ${algorithm}:`, error);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -11,13 +11,15 @@
   <label for="inputText">Input Text:</label>
   <textarea id="inputText" rows="4" cols="50"></textarea>
   
-  <button onclick="generateHash()">Generate Hash</button>
+  <button onclick="generateHashChain()">Generate Hash Chain</button>
 
   <h2>Generated Hashes:</h2>
   <ul id="hashList"></ul>
 
   <script>
-    function generateHash() {
+    const algorithms = ['SHA-256', 'SHA-512', 'MD5', 'SHA-1'];
+
+    async function generateHashChain() {
       const inputText = document.getElementById('inputText').value;
       
       if (inputText.trim() === '') {
@@ -25,12 +27,29 @@
         return;
       }
 
-      // ハッシュを生成
-      generateHashForAlgorithm(inputText, 'SHA-256');
-      generateHashForAlgorithm(inputText, 'SHA-512');
-      // 別のアルゴリズムを追加する場合はここに追加
+      const hashList = document.getElementById('hashList');
+      hashList.innerHTML = ''; // ハッシュリストをクリア
+
+      await generateHashesInOrder(inputText, algorithms, hashList);
 
       document.getElementById('inputText').value = ''; // 入力欄をクリア
+    }
+
+    async function generateHashesInOrder(input, algorithms, hashList) {
+      if (algorithms.length === 0) {
+        return;
+      }
+
+      const currentAlgorithm = algorithms.shift();
+      const currentHash = await generateHashForAlgorithm(input, currentAlgorithm);
+
+      // 生成したハッシュをリストに追加
+      const listItem = document.createElement('li');
+      listItem.textContent = `${currentAlgorithm}: ${currentHash}`;
+      hashList.appendChild(listItem);
+
+      // 次のアルゴリズムに対して再帰的に呼び出す
+      await generateHashesInOrder(currentHash, algorithms, hashList);
     }
 
     async function generateHashForAlgorithm(input, algorithm) {
@@ -42,13 +61,10 @@
         const hashArray = Array.from(new Uint8Array(buffer));
         const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
 
-        // 生成したハッシュをリストに追加
-        const hashList = document.getElementById('hashList');
-        const listItem = document.createElement('li');
-        listItem.textContent = `${algorithm}: ${hashHex}`;
-        hashList.appendChild(listItem);
+        return hashHex;
       } catch (error) {
         console.error(`Error generating hash with ${algorithm}:`, error);
+        return null;
       }
     }
   </script>
